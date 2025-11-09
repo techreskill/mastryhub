@@ -5,6 +5,7 @@ import { Rocket, Users, Trophy, Calendar, Code, Globe2, Sparkles, ArrowRight, Ch
 import { Globe } from './Globe'
 import { BlockchainStats } from './BlockchainStats'
 import { AppleStyleFeatures } from './AppleStyleFeatures'
+import { Web3Expertise } from './Web3Expertise'
 import { CookieConsent } from './CookieConsent'
 import { motion } from 'motion/react'
 
@@ -173,6 +174,9 @@ export function LandingPage() {
       {/* Apple-Style Features Section */}
       <AppleStyleFeatures />
 
+      {/* Web3 Expertise Section */}
+      <Web3Expertise />
+
       {/* How It Works */}
       <section className="py-16 md:py-24 lg:py-32 relative bg-gradient-to-b from-black via-purple-950/10 to-black">
         <div className="container mx-auto px-4 md:px-6">
@@ -303,9 +307,17 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-800 bg-black/50 backdrop-blur-sm py-8 md:py-12">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
             <div className="text-gray-400 text-sm md:text-base">
               Empowering Web3 Innovation
+            </div>
+            <div className="flex items-center gap-6">
+              <Link to="/past-events" className="text-gray-400 hover:text-purple-400 transition-colors text-sm md:text-base">
+                Past Events
+              </Link>
+              <Link to="/hackathons" className="text-gray-400 hover:text-purple-400 transition-colors text-sm md:text-base">
+                Hackathons
+              </Link>
             </div>
             <div className="text-gray-500 text-xs md:text-sm">
               © 2025 Mastry Hub. All rights reserved.

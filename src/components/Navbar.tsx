@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, Home, LayoutDashboard, Calendar, Menu, X } from 'lucide-react'
+import { LogOut, Home, LayoutDashboard, Calendar, Menu, X, Award } from 'lucide-react'
 import { Button } from './ui/button'
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
 import { useState } from 'react'
@@ -62,6 +62,16 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                   Hackathons
                 </Button>
               </Link>
+              <Link to="/past-events">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className={isLandingPage ? 'text-white hover:text-white hover:bg-white/10' : ''}
+                >
+                  <Award className="h-4 w-4 mr-2" />
+                  Past Events
+                </Button>
+              </Link>
               <Link to="/dashboard">
                 <Button 
                   variant="ghost" 
@@ -97,6 +107,16 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                 >
                   <Calendar className="h-4 w-4 mr-2" />
                   Hackathons
+                </Button>
+              </Link>
+              <Link to="/past-events">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className={isLandingPage ? 'text-white hover:text-white hover:bg-white/10' : ''}
+                >
+                  <Award className="h-4 w-4 mr-2" />
+                  Past Events
                 </Button>
               </Link>
               <Link to="/login">
@@ -159,6 +179,15 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                       Hackathons
                     </Button>
                   </Link>
+                  <Link to="/past-events" onClick={() => setIsOpen(false)}>
+                    <Button 
+                      variant="ghost" 
+                      className={`w-full justify-start ${isLandingPage ? 'text-white hover:text-white hover:bg-white/10' : ''}`}
+                    >
+                      <Award className="h-4 w-4 mr-2" />
+                      Past Events
+                    </Button>
+                  </Link>
                   <Link to="/dashboard" onClick={() => setIsOpen(false)}>
                     <Button 
                       variant="ghost" 
@@ -186,6 +215,15 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Hackathons
+                    </Button>
+                  </Link>
+                  <Link to="/past-events" onClick={() => setIsOpen(false)}>
+                    <Button 
+                      variant="ghost" 
+                      className={`w-full justify-start ${isLandingPage ? 'text-white hover:text-white hover:bg-white/10' : ''}`}
+                    >
+                      <Award className="h-4 w-4 mr-2" />
+                      Past Events
                     </Button>
                   </Link>
                   <Link to="/login" onClick={() => setIsOpen(false)}>

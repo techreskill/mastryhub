@@ -184,15 +184,6 @@ export function Signup({ onLogin }: SignupProps) {
               Login
             </Link>
           </p>
-          
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-center text-xs text-gray-500">
-              Administrator?{' '}
-              <Link to="/superadmin/signup" className="text-indigo-600 hover:text-indigo-700 hover:underline">
-                Create Super Admin Account
-              </Link>
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

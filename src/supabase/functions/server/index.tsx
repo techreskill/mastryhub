@@ -201,6 +201,36 @@ app.post('/make-server-66e6c95d/organizers/:organizerId/assign', async (c) => {
   }
 })
 
+// Get assigned users for an organizer
+app.get('/make-server-66e6c95d/organizers/:organizerId/users', async (c) => {
+  const { user, error, status } = await verifyUser(c.req.raw)
+  if (error) return c.json({ error }, status)
+  
+  try {
+    const currentUser = await kv.get(`user:${user.id}`)
+    if (currentUser?.role !== 'superadmin') {
+      return c.json({ error: 'Only super admins can view assigned users' }, 403)
+    }
+    
+    const organizerId = c.req.param('organizerId')
+    
+    // Find all users assigned to this organizer
+    const users = await kv.getByPrefix('user:')
+    const assignedUsers = users.filter((u: any) => u.organizerId === organizerId)
+    
+    return c.json(assignedUsers.map((u: any) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      createdAt: u.createdAt
+    })))
+  } catch (error) {
+    console.log('Get assigned users error:', error)
+    return c.json({ error: `Failed to get assigned users: ${error.message}` }, 500)
+  }
+})
+
 // Create hackathon
 app.post('/make-server-66e6c95d/hackathons', async (c) => {
   const { user, error, status } = await verifyUser(c.req.raw)
@@ -298,7 +328,7 @@ app.put('/make-server-66e6c95d/hackathons/:id', async (c) => {
   }
 })
 
-// Register for hackathon
+// Register for hackathon with custom form data
 app.post('/make-server-66e6c95d/hackathons/:id/register', async (c) => {
   const { user, error, status } = await verifyUser(c.req.raw)
   if (error) return c.json({ error }, status)
@@ -315,17 +345,193 @@ app.post('/make-server-66e6c95d/hackathons/:id/register', async (c) => {
       hackathon.participants = []
     }
     
-    if (hackathon.participants.includes(user.id)) {
+    // Check if already registered
+    const existingRegistration = await kv.get(`registration:${hackathonId}:${user.id}`)
+    if (existingRegistration) {
       return c.json({ error: 'Already registered' }, 400)
     }
     
-    hackathon.participants.push(user.id)
-    await kv.set(`hackathon:${hackathonId}`, hackathon)
+    // Get registration form data
+    const formData = await c.req.json()
     
-    return c.json({ message: 'Successfully registered', hackathon })
+    // Create registration record
+    const registration = {
+      id: crypto.randomUUID(),
+      hackathonId,
+      userId: user.id,
+      formData,
+      registeredAt: new Date().toISOString(),
+      status: 'confirmed'
+    }
+    
+    await kv.set(`registration:${hackathonId}:${user.id}`, registration)
+    
+    // Add user to participants list
+    if (!hackathon.participants.includes(user.id)) {
+      hackathon.participants.push(user.id)
+      await kv.set(`hackathon:${hackathonId}`, hackathon)
+    }
+    
+    return c.json({ message: 'Successfully registered', registration })
   } catch (error) {
     console.log('Register for hackathon error:', error)
     return c.json({ error: `Failed to register: ${error.message}` }, 500)
+  }
+})
+
+// Get user's registration for a hackathon
+app.get('/make-server-66e6c95d/hackathons/:id/my-registration', async (c) => {
+  const { user, error, status } = await verifyUser(c.req.raw)
+  if (error) return c.json({ error }, status)
+  
+  try {
+    const hackathonId = c.req.param('id')
+    const registration = await kv.get(`registration:${hackathonId}:${user.id}`)
+    
+    if (!registration) {
+      return c.json({ error: 'Not registered' }, 404)
+    }
+    
+    return c.json(registration)
+  } catch (error) {
+    console.log('Get registration error:', error)
+    return c.json({ error: `Failed to get registration: ${error.message}` }, 500)
+  }
+})
+
+// Create or join a team
+app.post('/make-server-66e6c95d/hackathons/:id/teams', async (c) => {
+  const { user, error, status } = await verifyUser(c.req.raw)
+  if (error) return c.json({ error }, status)
+  
+  try {
+    const hackathonId = c.req.param('id')
+    const { teamName, members } = await c.req.json()
+    
+    const teamId = crypto.randomUUID()
+    const team = {
+      id: teamId,
+      hackathonId,
+      name: teamName,
+      leader: user.id,
+      members: members || [user.id],
+      createdAt: new Date().toISOString()
+    }
+    
+    await kv.set(`team:${hackathonId}:${teamId}`, team)
+    
+    // Update user's team assignment
+    await kv.set(`team-assignment:${hackathonId}:${user.id}`, teamId)
+    
+    return c.json(team)
+  } catch (error) {
+    console.log('Create team error:', error)
+    return c.json({ error: `Failed to create team: ${error.message}` }, 500)
+  }
+})
+
+// Join existing team
+app.post('/make-server-66e6c95d/hackathons/:id/teams/:teamId/join', async (c) => {
+  const { user, error, status } = await verifyUser(c.req.raw)
+  if (error) return c.json({ error }, status)
+  
+  try {
+    const hackathonId = c.req.param('id')
+    const teamId = c.req.param('teamId')
+    
+    const team = await kv.get(`team:${hackathonId}:${teamId}`)
+    if (!team) {
+      return c.json({ error: 'Team not found' }, 404)
+    }
+    
+    if (team.members.includes(user.id)) {
+      return c.json({ error: 'Already in team' }, 400)
+    }
+    
+    team.members.push(user.id)
+    await kv.set(`team:${hackathonId}:${teamId}`, team)
+    await kv.set(`team-assignment:${hackathonId}:${user.id}`, teamId)
+    
+    return c.json(team)
+  } catch (error) {
+    console.log('Join team error:', error)
+    return c.json({ error: `Failed to join team: ${error.message}` }, 500)
+  }
+})
+
+// Submit project/idea
+app.post('/make-server-66e6c95d/hackathons/:id/submissions', async (c) => {
+  const { user, error, status } = await verifyUser(c.req.raw)
+  if (error) return c.json({ error }, status)
+  
+  try {
+    const hackathonId = c.req.param('id')
+    const submissionData = await c.req.json()
+    
+    const submissionId = crypto.randomUUID()
+    const submission = {
+      id: submissionId,
+      hackathonId,
+      userId: user.id,
+      ...submissionData,
+      submittedAt: new Date().toISOString(),
+      status: 'submitted'
+    }
+    
+    await kv.set(`submission:${hackathonId}:${user.id}`, submission)
+    
+    return c.json(submission)
+  } catch (error) {
+    console.log('Submit project error:', error)
+    return c.json({ error: `Failed to submit project: ${error.message}` }, 500)
+  }
+})
+
+// Get user's submission
+app.get('/make-server-66e6c95d/hackathons/:id/my-submission', async (c) => {
+  const { user, error, status } = await verifyUser(c.req.raw)
+  if (error) return c.json({ error }, status)
+  
+  try {
+    const hackathonId = c.req.param('id')
+    const submission = await kv.get(`submission:${hackathonId}:${user.id}`)
+    
+    return c.json(submission || null)
+  } catch (error) {
+    console.log('Get submission error:', error)
+    return c.json({ error: `Failed to get submission: ${error.message}` }, 500)
+  }
+})
+
+// Get user's team
+app.get('/make-server-66e6c95d/hackathons/:id/my-team', async (c) => {
+  const { user, error, status } = await verifyUser(c.req.raw)
+  if (error) return c.json({ error }, status)
+  
+  try {
+    const hackathonId = c.req.param('id')
+    const teamId = await kv.get(`team-assignment:${hackathonId}:${user.id}`)
+    
+    if (!teamId) {
+      return c.json(null)
+    }
+    
+    const team = await kv.get(`team:${hackathonId}:${teamId}`)
+    
+    // Get team member details
+    if (team && team.members) {
+      const memberDetails = await kv.mget(team.members.map((id: string) => `user:${id}`))
+      team.memberDetails = memberDetails.filter(Boolean).map((m: any) => ({
+        id: m.id,
+        name: m.name,
+        email: m.email
+      }))
+    }
+    
+    return c.json(team || null)
+  } catch (error) {
+    console.log('Get team error:', error)
+    return c.json({ error: `Failed to get team: ${error.message}` }, 500)
   }
 })
 

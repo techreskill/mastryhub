@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
@@ -12,13 +12,17 @@ interface RegistrationFormProps {
   hackathonId: string
   onSuccess: () => void
   isDark?: boolean
+  user?: {
+    name?: string
+    email?: string
+  }
 }
 
-export function RegistrationForm({ hackathonId, onSuccess, isDark = false }: RegistrationFormProps) {
+export function RegistrationForm({ hackathonId, onSuccess, isDark = false, user }: RegistrationFormProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
+    fullName: user?.name || '',
+    email: user?.email || '',
     phone: '',
     github: '',
     linkedin: '',
@@ -29,6 +33,17 @@ export function RegistrationForm({ hackathonId, onSuccess, isDark = false }: Reg
     motivation: '',
     agreeTerms: false,
   })
+
+  // Update form data when user prop changes
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: user.name || '',
+        email: user.email || ''
+      }))
+    }
+  }, [user])
 
   const inputClasses = isDark ? 'bg-gray-900 border-gray-700 text-white placeholder:text-gray-500' : 'bg-white border-gray-300 text-gray-900'
   const labelClasses = isDark ? 'text-gray-300' : 'text-gray-700'
@@ -47,22 +62,18 @@ export function RegistrationForm({ hackathonId, onSuccess, isDark = false }: Reg
     setLoading(true)
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      const { apiCall } = await import('../utils/api')
       
-      // Store registration in localStorage for demo
-      const registrations = JSON.parse(localStorage.getItem('hackathonRegistrations') || '[]')
-      registrations.push({
-        hackathonId,
-        ...formData,
-        registeredAt: new Date().toISOString(),
+      await apiCall(`/hackathons/${hackathonId}/register`, {
+        method: 'POST',
+        body: JSON.stringify(formData)
       })
-      localStorage.setItem('hackathonRegistrations', JSON.stringify(registrations))
 
-      toast.success('Successfully registered! Check your email for confirmation.')
+      toast.success('Successfully registered! Redirecting to your dashboard...')
       onSuccess()
-    } catch (error) {
-      toast.error('Registration failed. Please try again.')
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      toast.error(error.message || 'Registration failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -81,9 +92,16 @@ export function RegistrationForm({ hackathonId, onSuccess, isDark = false }: Reg
             required
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            className={`${inputClasses} mt-1`}
+            className={`${inputClasses} mt-1 ${user ? (isDark ? 'bg-gray-800 opacity-70 cursor-not-allowed' : 'bg-gray-100 cursor-not-allowed') : ''}`}
             placeholder="John Doe"
+            disabled={!!user}
+            readOnly={!!user}
           />
+          {user && (
+            <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              This information is from your account
+            </p>
+          )}
         </div>
 
         <div>
@@ -94,9 +112,16 @@ export function RegistrationForm({ hackathonId, onSuccess, isDark = false }: Reg
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className={`${inputClasses} mt-1`}
+            className={`${inputClasses} mt-1 ${user ? (isDark ? 'bg-gray-800 opacity-70 cursor-not-allowed' : 'bg-gray-100 cursor-not-allowed') : ''}`}
             placeholder="john@example.com"
+            disabled={!!user}
+            readOnly={!!user}
           />
+          {user && (
+            <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              This information is from your account
+            </p>
+          )}
         </div>
 
         <div>

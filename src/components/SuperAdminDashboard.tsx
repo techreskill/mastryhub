@@ -71,8 +71,11 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false)
+  const [isViewUsersDialogOpen, setIsViewUsersDialogOpen] = useState(false)
   const [selectedOrganizer, setSelectedOrganizer] = useState<string>('')
   const [selectedHackathon, setSelectedHackathon] = useState<Hackathon | null>(null)
+  const [assignedUsers, setAssignedUsers] = useState<any[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   
   // Form states
@@ -189,6 +192,23 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
     } catch (error: any) {
       console.error('Assign organizer error:', error)
       toast.error(error.message || 'Failed to assign organizer')
+    }
+  }
+
+  const handleViewAssignedUsers = async (organizerId: string) => {
+    setSelectedOrganizer(organizerId)
+    setIsViewUsersDialogOpen(true)
+    setLoadingUsers(true)
+    
+    try {
+      const users = await apiCall(`/organizers/${organizerId}/users`)
+      setAssignedUsers(users)
+    } catch (error: any) {
+      console.error('Get assigned users error:', error)
+      toast.error(error.message || 'Failed to load assigned users')
+      setAssignedUsers([])
+    } finally {
+      setLoadingUsers(false)
     }
   }
 
@@ -558,7 +578,7 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
                               <span>{orgHackathons.length} hackathon{orgHackathons.length !== 1 ? 's' : ''}</span>
                             </div>
                             
-                            <div className="pt-3">
+                            <div className="pt-3 space-y-2">
                               <Button 
                                 variant="outline" 
                                 className="w-full"
@@ -569,6 +589,15 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
                               >
                                 <Users className="mr-2 h-4 w-4" />
                                 Assign User
+                              </Button>
+                              
+                              <Button 
+                                variant="ghost" 
+                                className="w-full"
+                                onClick={() => handleViewAssignedUsers(organizer.id)}
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Assigned Users
                               </Button>
                             </div>
                           </CardContent>
@@ -717,6 +746,64 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
                 <Button type="submit">Assign</Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Assigned Users Dialog */}
+        <Dialog open={isViewUsersDialogOpen} onOpenChange={setIsViewUsersDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Assigned Users</DialogTitle>
+              <DialogDescription>
+                Users who have been assigned as organizers for{' '}
+                {organizers.find(o => o.id === selectedOrganizer)?.name}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {loadingUsers ? (
+                <div className="flex items-center justify-center py-8">
+                  <BlockchainLoader message="Loading Users" fullScreen={false} />
+                </div>
+              ) : assignedUsers.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600">No users assigned yet</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Click "Assign User" to add organizers to this organization
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {assignedUsers.map((user) => (
+                    <Card key={user.id} className="bg-gray-50">
+                      <CardContent className="py-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center">
+                              <User className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                              <div className="text-gray-900">{user.name}</div>
+                              <div className="text-sm text-gray-500">{user.email}</div>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="capitalize">
+                            {user.role}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+              
+              <div className="flex justify-end pt-4 border-t">
+                <Button variant="outline" onClick={() => setIsViewUsersDialogOpen(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
 

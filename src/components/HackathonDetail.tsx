@@ -22,10 +22,33 @@ export function HackathonDetail() {
   const [loading, setLoading] = useState(true)
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
   const [isDarkTheme, setIsDarkTheme] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [isRegistered, setIsRegistered] = useState(false)
 
   useEffect(() => {
+    checkUser()
     loadHackathon()
   }, [id])
+
+  const checkUser = async () => {
+    const accessToken = localStorage.getItem('access_token')
+    if (accessToken) {
+      try {
+        const userData = await apiCall('/me')
+        setUser(userData)
+        
+        // Check if user is already registered
+        try {
+          await apiCall(`/hackathons/${id}/my-registration`)
+          setIsRegistered(true)
+        } catch (error) {
+          setIsRegistered(false)
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error)
+      }
+    }
+  }
 
   const loadHackathon = async () => {
     try {
@@ -75,9 +98,9 @@ export function HackathonDetail() {
 
   const handleRegistrationSuccess = () => {
     setIsRegistrationOpen(false)
-    // Redirect to dashboard after successful registration
+    // Redirect to hackathon participant dashboard after successful registration
     setTimeout(() => {
-      navigate('/dashboard')
+      navigate(`/hackathon/${id}/dashboard`)
     }, 1000)
   }
 
@@ -234,22 +257,46 @@ export function HackathonDetail() {
               <p className="text-xl text-gray-300 max-w-3xl mb-6">{hackathon.description}</p>
               
               <div className="flex flex-wrap gap-4 items-center">
-                <Dialog open={isRegistrationOpen} onOpenChange={setIsRegistrationOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      size="lg"
-                      className={`bg-gradient-to-r ${hackathon.gradient} hover:opacity-90 text-white border-0 px-8 py-6 text-lg`}
-                    >
-                      Register Now
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className={`${isDarkTheme ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} max-w-2xl max-h-[90vh] overflow-y-auto`}>
-                    <DialogHeader>
-                      <DialogTitle className="text-2xl">Register for {hackathon.title}</DialogTitle>
-                    </DialogHeader>
-                    <RegistrationForm hackathonId={hackathon.id} onSuccess={handleRegistrationSuccess} isDark={isDarkTheme} />
-                  </DialogContent>
-                </Dialog>
+                {isRegistered ? (
+                  <Button 
+                    size="lg"
+                    onClick={() => navigate(`/hackathon/${id}/dashboard`)}
+                    className={`bg-gradient-to-r ${hackathon.gradient} hover:opacity-90 text-white border-0 px-8 py-6 text-lg`}
+                  >
+                    <CheckCircle2 className="mr-2 h-5 w-5" />
+                    Go to Dashboard
+                  </Button>
+                ) : user ? (
+                  <Dialog open={isRegistrationOpen} onOpenChange={setIsRegistrationOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        size="lg"
+                        className={`bg-gradient-to-r ${hackathon.gradient} hover:opacity-90 text-white border-0 px-8 py-6 text-lg`}
+                      >
+                        Register Now
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className={`${isDarkTheme ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} max-w-2xl max-h-[90vh] overflow-y-auto`}>
+                      <DialogHeader>
+                        <DialogTitle className="text-2xl">Register for {hackathon.title}</DialogTitle>
+                      </DialogHeader>
+                      <RegistrationForm 
+                        hackathonId={hackathon.id} 
+                        onSuccess={handleRegistrationSuccess} 
+                        isDark={isDarkTheme}
+                        user={user}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                ) : (
+                  <Button 
+                    size="lg"
+                    onClick={() => navigate('/signup')}
+                    className={`bg-gradient-to-r ${hackathon.gradient} hover:opacity-90 text-white border-0 px-8 py-6 text-lg`}
+                  >
+                    Sign Up to Register
+                  </Button>
+                )}
                 
                 <Button size="lg" variant="outline" className="bg-black/50 backdrop-blur-sm border-gray-700 text-white hover:bg-white/10">
                   <Heart className="mr-2 h-5 w-5" />
@@ -501,22 +548,46 @@ export function HackathonDetail() {
             <p className={`text-xl ${themeClasses.textSecondary} mb-8`}>
               Don't miss this opportunity to build, learn, and win amazing prizes
             </p>
-            <Dialog open={isRegistrationOpen} onOpenChange={setIsRegistrationOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  size="lg"
-                  className={`bg-gradient-to-r ${hackathon.gradient} hover:opacity-90 text-white border-0 px-12 py-7 text-xl`}
-                >
-                  Register for {hackathon.title}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className={`${isDarkTheme ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} max-w-2xl max-h-[90vh] overflow-y-auto`}>
-                <DialogHeader>
-                  <DialogTitle className="text-2xl">Register for {hackathon.title}</DialogTitle>
-                </DialogHeader>
-                <RegistrationForm hackathonId={hackathon.id} onSuccess={handleRegistrationSuccess} isDark={isDarkTheme} />
-              </DialogContent>
-            </Dialog>
+            {isRegistered ? (
+              <Button 
+                size="lg"
+                onClick={() => navigate(`/hackathon/${id}/dashboard`)}
+                className={`bg-gradient-to-r ${hackathon.gradient} hover:opacity-90 text-white border-0 px-12 py-7 text-xl`}
+              >
+                <CheckCircle2 className="mr-2 h-6 w-6" />
+                Go to Your Dashboard
+              </Button>
+            ) : user ? (
+              <Dialog open={isRegistrationOpen} onOpenChange={setIsRegistrationOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    size="lg"
+                    className={`bg-gradient-to-r ${hackathon.gradient} hover:opacity-90 text-white border-0 px-12 py-7 text-xl`}
+                  >
+                    Register for {hackathon.title}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className={`${isDarkTheme ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} max-w-2xl max-h-[90vh] overflow-y-auto`}>
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl">Register for {hackathon.title}</DialogTitle>
+                  </DialogHeader>
+                  <RegistrationForm 
+                    hackathonId={hackathon.id} 
+                    onSuccess={handleRegistrationSuccess} 
+                    isDark={isDarkTheme}
+                    user={user}
+                  />
+                </DialogContent>
+              </Dialog>
+            ) : (
+              <Button 
+                size="lg"
+                onClick={() => navigate('/signup')}
+                className={`bg-gradient-to-r ${hackathon.gradient} hover:opacity-90 text-white border-0 px-12 py-7 text-xl`}
+              >
+                Sign Up to Register
+              </Button>
+            )}
           </div>
         </div>
       </section>
