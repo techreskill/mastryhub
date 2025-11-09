@@ -15,6 +15,7 @@ import {
   AlertCircle, CheckCircle2, XCircle, Clock, MapPin
 } from 'lucide-react'
 import { toast } from 'sonner@2.0.3'
+import { BlockchainLoader } from './BlockchainLoader'
 
 interface Organizer {
   id: string
@@ -388,10 +389,7 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-                    <p className="mt-4 text-gray-600">Loading hackathons...</p>
-                  </div>
+                  <BlockchainLoader message="Loading Hackathons" fullScreen={false} />
                 ) : filteredHackathons.length === 0 ? (
                   <div className="text-center py-12">
                     <Trophy className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -503,10 +501,7 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-                    <p className="mt-4 text-gray-600">Loading organizers...</p>
-                  </div>
+                  <BlockchainLoader message="Loading Organizers" fullScreen={false} />
                 ) : filteredOrganizers.length === 0 ? (
                   <div className="text-center py-12">
                     <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />

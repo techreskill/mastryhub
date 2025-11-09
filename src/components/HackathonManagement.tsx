@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner@2.0.3'
 import { ImageWithFallback } from './figma/ImageWithFallback'
+import { BlockchainLoader } from './BlockchainLoader'
 import {
   ChartContainer,
   ChartTooltip,
@@ -167,14 +168,7 @@ export function HackathonManagement() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mb-4"></div>
-          <p className="text-gray-600">Loading hackathon management...</p>
-        </div>
-      </div>
-    )
+    return <BlockchainLoader message="Loading Hackathon Management" />
   }
 
   if (!hackathon) {

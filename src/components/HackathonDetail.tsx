@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import mastryLogo from 'figma:asset/16e7b499ec18ef7688190dd04429645b08d3e021.png'
 import { apiCall } from '../utils/api'
 import { toast } from 'sonner@2.0.3'
+import { BlockchainLoader } from './BlockchainLoader'
 
 export function HackathonDetail() {
   const { id } = useParams<{ id: string }>()
@@ -81,14 +82,7 @@ export function HackathonDetail() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading hackathon details...</p>
-        </div>
-      </div>
-    )
+    return <BlockchainLoader message="Loading Hackathon Details" />
   }
 
   if (!hackathon) {

@@ -15,6 +15,7 @@ import { HackathonManagement } from './components/HackathonManagement'
 import { createClient } from './utils/supabase/client'
 import { apiCall } from './utils/api'
 import { Toaster } from './components/ui/sonner'
+import { BlockchainLoader } from './components/BlockchainLoader'
 
 export default function App() {
   const [user, setUser] = useState<any>(null)
@@ -64,14 +65,7 @@ export default function App() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mb-4"></div>
-          <p className="text-gray-600">Loading Mastry Hub...</p>
-        </div>
-      </div>
-    )
+    return <BlockchainLoader message="Initializing Mastry Hub" />
   }
 
   return (

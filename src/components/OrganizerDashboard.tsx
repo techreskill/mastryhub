@@ -7,6 +7,7 @@ import { Badge } from './ui/badge'
 import { Plus, Settings, Calendar, MapPin, DollarSign, Users, BarChart3, Eye } from 'lucide-react'
 import { toast } from 'sonner@2.0.3'
 import { ImageWithFallback } from './figma/ImageWithFallback'
+import { BlockchainLoader } from './BlockchainLoader'
 
 interface Hackathon {
   id: string
@@ -67,9 +68,7 @@ export function OrganizerDashboard({ user }: OrganizerDashboardProps) {
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600"></div>
-          </div>
+          <BlockchainLoader message="Loading Your Hackathons" fullScreen={false} />
         ) : hackathons.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">
